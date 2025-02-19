@@ -29,11 +29,14 @@ class LandingPage extends ConsumerWidget {
             fontSize: uiConfig.subTitleSize,
             textAlign: TextAlign.center,
           ),
-          MUISecondaryButton(
-            text: "Get Started",
-            onPressed: () {
-              ref.read(githubAuthProvider.notifier).signInWithGithub();
-            },
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: MUISecondaryButton(
+              text: "Get Started",
+              onPressed: () {
+                ref.read(githubAuthProvider.notifier).signInWithGithub();
+              },
+            ),
           ),
         ],
       ),
