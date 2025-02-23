@@ -39,8 +39,8 @@ class GeminiService:
         cached_result = self.redis_client.get(cache_key)
         if cached_result:
             return json.loads(cached_result)
-
         async with self.chunk_semaphore: 
+
             try:
                 response = await asyncio.to_thread(
                     self.model.generate_content,
@@ -126,7 +126,6 @@ class GeminiService:
         all_issues = []
 
         async with aiohttp.ClientSession() as session:
-            
             tasks = [self._process_chunk(chunk, session) for chunk in chunks]
             chunk_results = await asyncio.gather(*tasks)
             

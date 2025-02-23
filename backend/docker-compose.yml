@@ -1,5 +1,5 @@
 services:
-  api:
+  commitz-backend:
     build:
       context: ./app
       dockerfile: Dockerfile
@@ -26,9 +26,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-      
 
-  redis:
+
+  redis-commitz:
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -51,5 +51,5 @@ volumes:
     driver: local
 
 networks:
-  app-network:
+  commitz-network:
     driver: bridge

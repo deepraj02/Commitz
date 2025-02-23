@@ -9,6 +9,7 @@ import asyncio
 from starlette.responses import StreamingResponse
 import json
 from dotenv import load_dotenv
+import aiohttp
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -150,3 +152,11 @@ async def generate_video_transcript(request: VideoRequest):
             status_code=500,
             detail=f"Error processing request: {str(e)}"
         )
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

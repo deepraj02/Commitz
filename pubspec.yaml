@@ -50,6 +50,10 @@ dependencies:
   forui_assets: ^0.9.1
   modular_ui: ^0.0.5
   font_awesome_flutter: ^10.8.0
+  skeletonizer: ^1.4.3
+  freezed: ^2.5.8
+  json_serializable: ^6.9.4
+  wolt_modal_sheet: ^0.11.0
 
 dev_dependencies:
   flutter_test:
