@@ -67,7 +67,7 @@ class GeminiService:
     def _get_prompt(self) -> str:
         return """
         You are a senior software developer creating detailed GitHub issues from a video transcript.
-        Analyze this transcript segment and create practical, actionable GitHub issues that will help someone learn and implement the concepts discussed.
+        Analyze this transcript segment and create practical, actionable GitHub issues that will help someone learn and implement the concepts discussed and send me the issues in order to the timestamp of the video thus maintaining a clear learning path.
         
         Create detailed issues that include:
         1. Clear implementation steps
@@ -99,7 +99,6 @@ class GeminiService:
                         ]
                     },
                     "difficulty": "beginner/intermediate/advanced",
-                    "estimated_hours": 2,
                     "labels": ["enhancement", "learning"]
                 }
             ]

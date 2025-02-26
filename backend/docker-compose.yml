@@ -1,10 +1,10 @@
 services:
-  commitz-backend:
+  api:
     build:
-      context: ./app
+      context: ./app/
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "9000:9000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - REDIS_URL=redis://redis:6379
@@ -12,8 +12,7 @@ services:
     volumes:
       - ./app:/app:ro
     depends_on:
-      redis:
-        condition: service_healthy
+      - redis
     networks:
       - app-network
     deploy:
@@ -27,8 +26,7 @@ services:
       retries: 3
       start_period: 40s
 
-
-  redis-commitz:
+  redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -51,5 +49,5 @@ volumes:
     driver: local
 
 networks:
-  commitz-network:
+  app-network:
     driver: bridge
