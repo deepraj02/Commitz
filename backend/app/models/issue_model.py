@@ -5,7 +5,6 @@ class Issue(BaseModel):
     title: str
     description: str
     priority: str
-    estimated_time: Optional[str]
     tags: List[str]
 
 class IssueResponse(BaseModel):
