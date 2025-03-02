@@ -1,10 +1,11 @@
 // ignore: constant_identifier_names
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
-class VideoTransript {
-  VideoTransript._();
-  static final instance = VideoTransript._();
+class VideoTransriptService {
+  VideoTransriptService._();
+  static final instance = VideoTransriptService._();
   static final String baseUrl = "http://localhost:3000/api/v1/";
   final Dio _dio = Dio(
     BaseOptions(
@@ -31,11 +32,11 @@ class VideoTransript {
         onReceiveProgress: onReceiveProgress,
       );
       if (response.statusCode == 200) {
-        return response.data;
+        return Right(response.data);
       }
-      throw "something went wrong";
+      return Left("something went wrong");
     } catch (e) {
-      rethrow;
+      return Left(e.toString());
     }
   }
 
@@ -59,11 +60,11 @@ class VideoTransript {
         onReceiveProgress: onReceiveProgress,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return response.data;
+        return Right(response.data);
       }
-      throw "something went wrong";
+      return Left("something went wrong");
     } catch (e) {
-      rethrow;
+      return Left(e.toString());
     }
   }
 
@@ -88,11 +89,11 @@ class VideoTransript {
         onReceiveProgress: onReceiveProgress,
       );
       if (response.statusCode == 200) {
-        return response.data;
+        return Right(response.data);
       }
-      throw "something went wrong";
+      return Left("something went wrong");
     } catch (e) {
-      rethrow;
+      return Left(e.toString());
     }
   }
 
@@ -115,11 +116,15 @@ class VideoTransript {
         cancelToken: cancelToken,
       );
       if (response.statusCode == 204) {
-        return right(response.data);
+        return Right(response.data);
       }
-      throw "something went wrong";
+      return Left("something went wrong");
     } catch (e) {
-      rethrow;
+      return Left(e.toString());
     }
   }
 }
+
+final videoTranscriptServiceProvider = Provider<VideoTransriptService>((ref) {
+  return VideoTransriptService.instance;
+});

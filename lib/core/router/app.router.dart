@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../features/landing/pages/landing.page.dart';
+import '../../features/auth/pages/landing.page.dart';
 import '../providers/global_providers.dart';
 
 part 'app.router.g.dart';
@@ -22,8 +22,7 @@ GoRouter router(RouterRef ref) {
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
           return Scaffold(
-            
-           backgroundColor: const Color(0xff0A0A0A),
+            backgroundColor: const Color(0xff0A0A0A),
             body: child,
           );
         },
@@ -36,6 +35,12 @@ GoRouter router(RouterRef ref) {
             path: HomePage.route,
             builder: (context, state) => HomePage(),
           ),
+          // GoRoute(
+          //   path: '/project/:id',
+          //   builder:
+          //       (context, state) =>
+          //           ProjectDetailPage(projectId: state.pathParameters['id']!),
+          // ),
         ],
       ),
     ],
