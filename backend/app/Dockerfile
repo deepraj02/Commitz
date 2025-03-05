@@ -29,6 +29,6 @@ USER appuser
 
 ENV PYTHONPATH=/app
 
-EXPOSE 8000
+EXPOSE 9000
 
-CMD ["bash", "-c", "cd /app && python -m uvicorn main:app --host 0.0.0.0 --port 9000 --reload"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000", "--reload"]

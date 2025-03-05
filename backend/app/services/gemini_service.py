@@ -225,7 +225,6 @@ class GeminiService:
             await self._wait_for_rate_limit()
             try:
                 config = self.fast_generation_config if fast_mode else self.generation_config
-                
                 # Use timeout to prevent long-running requests
                 response_future = asyncio.create_task(asyncio.to_thread(
                     lambda: self.model.generate_content(
