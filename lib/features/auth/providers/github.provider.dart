@@ -6,7 +6,7 @@ import '../services/github.service.dart';
 
 final githubServiceProvider = Provider<IAuthService>((ref) {
   return GithubAuthService(
-    auth: ref.read(firebaseAuthProvider),
-    firestore: ref.read(firestoreProvider),
+    auth: ref.read(firebaseAuthInstanceProvider),
+    firestore: ref.read(firestoreInstanceProvider),
   );
 });

@@ -33,7 +33,7 @@ class GithubAuth extends _$GithubAuth {
   }
 
   Future<void> init() async {
-    final userSession = ref.read(userSessionProvider);
+    final userSession = ref.read(userSessionInstanceProvider);
     if (userSession != null) {
       state = AuthStateSuccess(user: userSession);
     } else {

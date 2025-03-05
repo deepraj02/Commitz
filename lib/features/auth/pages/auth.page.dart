@@ -1,15 +1,15 @@
 import 'package:commitz/core/helpers/responsive_layout.helper.dart';
-import 'package:commitz/features/auth/providers/github.service.provider.dart';
 import 'package:commitz/features/auth/pages/responsive.config.dart';
+import 'package:commitz/features/auth/providers/github.service.provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:modular_ui/modular_ui.dart';
 
 import '../../../core/helpers/text.dart';
 
-class LandingPage extends ConsumerWidget {
+class AuthPage extends ConsumerWidget {
   static const String route = "/";
-  const LandingPage({super.key});
+  const AuthPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
