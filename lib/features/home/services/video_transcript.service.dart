@@ -6,7 +6,7 @@ import 'package:fpdart/fpdart.dart';
 class VideoTransriptService {
   VideoTransriptService._();
   static final instance = VideoTransriptService._();
-  static final String baseUrl = "http://localhost:3000/api/v1/";
+  static final String baseUrl = "http://localhost:9000/api/v1";
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,

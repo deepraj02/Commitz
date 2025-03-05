@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/helpers/responsive_layout.helper.dart';
-import 'responsive.dart';
+import '../widgets/responsive.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   static const String route = "/home";
