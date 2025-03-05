@@ -126,22 +126,23 @@ async def generate_streaming_response(video_id: str):
                 }) + "\n"
         
         logger.info("All chunks processed, deduplicating issues")
-        unique_issues = {}
+        unique_issues = []
+        seen_titles = set()
+        
         for issue in all_issues:
             title = issue.get('title', '')
-            if title and title not in unique_issues:
-                unique_issues[title] = {
+            if title and title not in seen_titles:
+                seen_titles.add(title)
+                # Ensure we only include title and description
+                unique_issues.append({
                     "title": title,
-                    "description": gemini_service._format_description(issue),
-                    "difficulty": issue.get('difficulty', 'intermediate'),
-                    "labels": issue.get('labels', ["learning"]),
-                    "prerequisites": issue.get('body', {}).get('prerequisites', [])
-                }
+                    "description": gemini_service._format_description(issue)
+                })
         
         logger.info(f"Found {len(unique_issues)} unique issues after deduplication")
         final_response = {
             "status": "complete",
-            "issues": list(unique_issues.values()),
+            "issues": unique_issues,
             "total_count": len(unique_issues)
         }
         
@@ -173,11 +174,19 @@ async def generate_video_transcript_stream(
         # Try cached result first
         cached_result = await gemini_service.get_cached_video_issues(video_id)
         if cached_result:
+            # Ensure we only return title and description
+            cleaned_issues = []
+            for issue in cached_result.get("issues", []):
+                cleaned_issues.append({
+                    "title": issue.get("title", ""),
+                    "description": issue.get("description", "")
+                })
+            
             yield json.dumps({
                 "status": "complete",
                 "cached": True,
-                "issues": cached_result["issues"],
-                "total_count": cached_result["total_count"]
+                "issues": cleaned_issues,
+                "total_count": len(cleaned_issues)
             }) + "\n"
             return
 
@@ -211,8 +220,19 @@ async def generate_video_transcript(request: VideoRequest, api_key: Optional[str
         # Try to get cached result first
         cached_result = await gemini_service.get_cached_video_issues(video_id)
         if cached_result:
-            cached_result["cached"] = True
-            return cached_result
+            # Ensure we only return title and description
+            cleaned_issues = []
+            for issue in cached_result.get("issues", []):
+                cleaned_issues.append({
+                    "title": issue.get("title", ""),
+                    "description": issue.get("description", "")
+                })
+            
+            return {
+                "issues": cleaned_issues,
+                "total_count": len(cleaned_issues),
+                "cached": True
+            }
         
         transcript_list = await asyncio.to_thread(
             YouTubeTranscriptApi.get_transcript,
@@ -227,6 +247,17 @@ async def generate_video_transcript(request: VideoRequest, api_key: Optional[str
             )
         
         issues_response = await gemini_service.process_transcript(transcript, video_id)
+        
+        # Final check to ensure only title and description are included
+        if "issues" in issues_response:
+            clean_issues = []
+            for issue in issues_response["issues"]:
+                clean_issues.append({
+                    "title": issue.get("title", ""),
+                    "description": issue.get("description", "")
+                })
+            issues_response["issues"] = clean_issues
+            
         return issues_response
         
     except ValueError as e:

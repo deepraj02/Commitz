@@ -161,8 +161,6 @@ class GeminiService:
         """Create smaller chunks for faster processing"""
         logger.info(f"Chunking transcript of length {len(transcript)}")
         words = transcript.split()
-        
-        # Use smaller chunks based on transcript length
         total_words = len(words)
         if total_words < 1000:
             chunk_size = 150  # Very small chunks for short transcripts
@@ -489,15 +487,37 @@ class GeminiService:
         if video_id:
             cached_result = await self.get_cached_video_issues(video_id)
             if cached_result and cached_result.get('issues'):
-                logger.info(f"Found {len(cached_result['issues'])} cached issues")
-                return cached_result
+                # Ensure cached results only contain title and description
+                cleaned_issues = []
+                for issue in cached_result['issues']:
+                    cleaned_issues.append({
+                        "title": issue.get('title', ''),
+                        "description": issue.get('description', '')
+                    })
+                logger.info(f"Found {len(cleaned_issues)} cached issues")
+                return {
+                    "issues": cleaned_issues,
+                    "total_count": len(cleaned_issues),
+                    "cached": True
+                }
                 
             # Check for partial cached results
             partial_cached = await self.get_partial_cached_issues(video_id)
             if partial_cached and partial_cached.get('issues') and len(partial_cached.get('issues', [])) >= self.min_issues_to_return:
-                logger.info(f"Found {len(partial_cached['issues'])} partially cached issues")
-                partial_cached['partial'] = True
-                return partial_cached
+                # Ensure partial cached results only contain title and description
+                cleaned_issues = []
+                for issue in partial_cached['issues']:
+                    cleaned_issues.append({
+                        "title": issue.get('title', ''),
+                        "description": issue.get('description', '')
+                    })
+                logger.info(f"Found {len(cleaned_issues)} partially cached issues")
+                return {
+                    "issues": cleaned_issues,
+                    "total_count": len(cleaned_issues),
+                    "partial": True,
+                    "cached": True
+                }
 
         chunks = self._chunk_transcript(transcript)
         all_issues = []
@@ -579,9 +599,20 @@ class GeminiService:
             # Try to get partial cached results as a fallback
             partial_cached = await self.get_partial_cached_issues(video_id)
             if partial_cached and partial_cached.get('issues') and len(partial_cached.get('issues', [])) >= self.min_issues_to_return:
-                logger.info(f"Using {len(partial_cached['issues'])} partially cached issues as fallback")
-                partial_cached['partial'] = True
-                return partial_cached
+                # Ensure partial cached results only contain title and description
+                cleaned_issues = []
+                for issue in partial_cached['issues']:
+                    cleaned_issues.append({
+                        "title": issue.get('title', ''),
+                        "description": issue.get('description', '')
+                    })
+                logger.info(f"Using {len(cleaned_issues)} partially cached issues as fallback")
+                return {
+                    "issues": cleaned_issues,
+                    "total_count": len(cleaned_issues),
+                    "partial": True,
+                    "cached": True
+                }
                 
             logger.warning("Too few issues and timeout hit, trying emergency mode")
             unique_issues = self._generate_emergency_issues(transcript)
@@ -634,21 +665,22 @@ class GeminiService:
         except Exception as e:
             logger.error(f"Error enhancing issue completeness: {str(e)}")
         
+        # Build the final simplified result
+        final_issues = []
+        for title, issue in unique_issues.items():
+            final_issues.append({
+                "title": title,
+                "description": issue.get("description", "")
+            })
+        
         result = {
-            "issues": list(unique_issues.values()),
-            "total_count": len(unique_issues),
+            "issues": final_issues,
+            "total_count": len(final_issues),
             "cached": False,
             "partial": timeout_hit,
             "processed_chunks": processed_chunks,
             "total_chunks": len(chunks)
         }
-        
-        # Add coverage information if available
-        if 'coverage_analysis' in locals():
-            result["coverage"] = {
-                "score": coverage_analysis["coverage_score"],
-                "topic_distribution": coverage_analysis["topic_distribution"]
-            }
 
         # Cache results
         if video_id and result["issues"]:
@@ -696,18 +728,28 @@ class GeminiService:
                     title = f"Implement code feature {i+1} from the video"
                     unique_issues[title] = {
                         "title": title,
-                        "description": f"## Implementation\n```\n{code[:200]}...\n```\n\nImplement this specific code example shown in the tutorial video.",
-                        "difficulty": "intermediate",
-                        "labels": ["implementation", "hands-on"],
-                        "prerequisites": [],
-                        "best_practices": [],
-                        "additional_resources": [],
-                        "learning_objectives": ["Implement this exact code pattern from the video"],
-                        "implementation_steps": [
-                            "1. Create the necessary file structure", 
-                            "2. Copy and implement this exact code as shown in the video",
-                            "3. Test that it works as demonstrated in the tutorial"
-                        ]
+                        "description": f"""
+## Implementation
+```
+{code[:200]}...
+```
+
+Implement this specific code example shown in the tutorial video.
+
+### Learning Objectives
+- Implement this exact code pattern from the video
+
+### Implementation Steps
+1. Create the necessary file structure
+2. Copy and implement this exact code as shown in the video
+3. Test that it works as demonstrated in the tutorial
+
+### Difficulty
+intermediate
+
+### Labels
+implementation, hands-on
+"""
                     }
             
             # Create issues from implementation sentences
@@ -723,32 +765,52 @@ class GeminiService:
                 relevant_sentence = next((s for s in implementation_sentences if topic[11:20] in s), implementation_sentences[0])
                 unique_issues[topic] = {
                     "title": topic,
-                    "description": f"## Practical Task\nImplement this specific feature from the tutorial:\n\n> {relevant_sentence}\n\nFollow the video instructions exactly to complete this task.",
-                    "difficulty": "intermediate",
-                    "labels": ["implementation", "hands-on"],
-                    "prerequisites": [],
-                    "best_practices": [],
-                    "additional_resources": [],
-                    "learning_objectives": ["Build this specific feature as shown in the video"],
-                    "implementation_steps": [
-                        "1. Follow the step-by-step instructions in the video", 
-                        "2. Implement the feature exactly as demonstrated",
-                        "3. Test to make sure it works as shown"
-                    ]
+                    "description": f"""
+## Practical Task
+Implement this specific feature from the tutorial:
+
+> {relevant_sentence}
+
+Follow the video instructions exactly to complete this task.
+
+### Learning Objectives
+- Build this specific feature as shown in the video
+
+### Implementation Steps
+1. Follow the step-by-step instructions in the video
+2. Implement the feature exactly as demonstrated
+3. Test to make sure it works as shown
+
+### Difficulty
+intermediate
+
+### Labels
+implementation, hands-on
+"""
                 }
                 
             # Create a project-based issue if we have nothing else
             if not unique_issues:
                 unique_issues["Build the project shown in the tutorial"] = {
                     "title": "Build the project shown in the tutorial",
-                    "description": "## Complete Project Implementation\nFollow the tutorial to build the complete working project as demonstrated in the video.",
-                    "difficulty": "intermediate",
-                    "labels": ["project", "implementation"],
-                    "prerequisites": [],
-                    "best_practices": [],
-                    "additional_resources": [],
-                    "learning_objectives": ["Build a fully functional version of the project shown"],
-                    "implementation_steps": ["1. Watch the full tutorial", "2. Follow each implementation step in sequence", "3. Test your implementation against the expected outcome"]
+                    "description": """
+## Complete Project Implementation
+Follow the tutorial to build the complete working project as demonstrated in the video.
+
+### Learning Objectives
+- Build a fully functional version of the project shown
+
+### Implementation Steps
+1. Watch the full tutorial
+2. Follow each implementation step in sequence
+3. Test your implementation against the expected outcome
+
+### Difficulty
+intermediate
+
+### Labels
+project, implementation
+"""
                 }
                 
             return unique_issues
@@ -759,14 +821,23 @@ class GeminiService:
             return {
                 "Implement the tutorial project": {
                     "title": "Implement the tutorial project",
-                    "description": "## Hands-On Implementation\nBuild the project demonstrated in the tutorial video by following each step shown.",
-                    "difficulty": "intermediate",
-                    "labels": ["implementation", "hands-on"],
-                    "prerequisites": [],
-                    "best_practices": [],
-                    "additional_resources": [],
-                    "learning_objectives": ["Complete a working implementation of the project"],
-                    "implementation_steps": ["Follow the video step-by-step", "Test each component as you build it"]
+                    "description": """
+## Hands-On Implementation
+Build the project demonstrated in the tutorial video by following each step shown.
+
+### Learning Objectives
+- Complete a working implementation of the project
+
+### Implementation Steps
+- Follow the video step-by-step
+- Test each component as you build it
+
+### Difficulty
+intermediate
+
+### Labels
+implementation, hands-on
+"""
                 }
             }
 
@@ -775,41 +846,45 @@ class GeminiService:
         for issue in issues:
             title = issue.get('title', '')
             if title and title not in unique_issues:
+                # Include only title and description fields
                 unique_issues[title] = {
                     "title": title,
-                    "description": self._format_description(issue),
-                    "difficulty": issue.get('difficulty', 'intermediate'),
-                    "labels": issue.get('labels', ["learning"]),
-                    "prerequisites": issue.get('body', {}).get('prerequisites', []),
-                    "best_practices": issue.get('body', {}).get('best_practices', []),
-                    "additional_resources": issue.get('body', {}).get('additional_resources', []),
-                    "learning_objectives": issue.get('body', {}).get('learning_objectives', []),
-                    "implementation_steps": issue.get('body', {}).get('implementation_steps', [])
+                    "description": self._format_description(issue)
                 }
         return unique_issues
 
     def _format_description(self, issue: dict) -> str:
         logger.debug(f"Formatting description for issue: {issue.get('title', 'Untitled')}")
         body = issue.get('body', {})
-        return f"""
+        
+        # Create a comprehensive markdown description that includes all information
+        description = f"""
 ## Overview
 {body.get('description', '')}
 
-## Learning Objectives
+### Learning Objectives
 {chr(10).join(body.get('learning_objectives', []))}
 
-## Implementation Steps
+### Implementation Steps
 {chr(10).join(body.get('implementation_steps', []))}
 
-## Expected Outcome
+### Expected Outcome
 {body.get('expected_outcome', '')}
 
-## Prerequisites
+### Difficulty
+{issue.get('difficulty', 'intermediate')}
+
+### Prerequisites
 {chr(10).join(body.get('prerequisites', []))}
 
-## Best Practices
+### Best Practices
 {chr(10).join(body.get('best_practices', []))}
 
-## Additional Resources
+### Additional Resources
 {chr(10).join(body.get('additional_resources', []))}
+
+### Labels
+{', '.join(issue.get('labels', ["learning"]))}
         """.strip()
+        
+        return description
