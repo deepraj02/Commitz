@@ -38,8 +38,8 @@ GoRouter router(ref) {
             builder: (context, state) => HomePage(),
           ),
           GoRoute(
-            path: '/project',
-            name: '/project',
+            path: ProjectPage.route,
+            name: ProjectPage.route,
             builder: (context, state) {
               final isLoggedin =
                   ref.read(firebaseAuthInstanceProvider).currentUser != null;
