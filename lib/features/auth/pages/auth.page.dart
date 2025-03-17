@@ -24,8 +24,7 @@ class AuthPage extends ConsumerWidget {
         children: <Widget>[
           CommitzText.gradient(text: "Commitz", fontSize: uiConfig!.titleSize),
           CommitzText(
-            text:
-                "convert long boring youtube videos into \n interactive github issues",
+            text: "Transform Video Content into Actionable\n Development Tasks",
             fontSize: uiConfig.subTitleSize,
             textAlign: TextAlign.center,
           ),
