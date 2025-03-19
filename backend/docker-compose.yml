@@ -1,6 +1,8 @@
 services:
   api:
-    image: infamous404/commitz:0.2
+    build:
+      context: ./app/
+      dockerfile: Dockerfile
     ports:
       - "9000:9000"
     environment:
