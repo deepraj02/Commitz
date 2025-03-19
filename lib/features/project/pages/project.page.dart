@@ -3,6 +3,7 @@ import 'package:commitz/core/helpers/responsive_layout.helper.dart';
 import 'package:commitz/core/providers/global_providers.dart';
 import 'package:commitz/features/project/widgets/responsive.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -180,60 +181,56 @@ class ProjectPage extends ConsumerWidget {
   }
 
   void _showIssueDetails(BuildContext context, Map<String, dynamic> issue) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
       builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            child: Padding(
               padding: EdgeInsets.all(20.0),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40.0,
-                      height: 5.0,
-                      margin: EdgeInsets.only(bottom: 20.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2.5),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    issue['title'] ?? "Untitled Issue",
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
+                  Markdown(
+                    data: issue['title'] ?? "Untitled Issue",
+                    shrinkWrap: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                     ),
                   ),
                   SizedBox(height: 16.0),
-                  Text(
-                    "Description",
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Markdown(
+                        data: issue['description'] ?? "No description",
+                        shrinkWrap: true,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(fontSize: 14.0),
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(height: 8.0),
-                  SelectableText(
-                    issue['description'] ?? "No description",
-                    style: TextStyle(fontSize: 14.0),
+                  SizedBox(height: 16.0),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Close'),
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
