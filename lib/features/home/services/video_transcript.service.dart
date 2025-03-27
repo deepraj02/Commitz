@@ -16,30 +16,6 @@ class VideoTransriptService {
     ),
   );
 
-  Future<Either<String, Map<String, dynamic>>> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.get(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-        onReceiveProgress: onReceiveProgress,
-      );
-      if (response.statusCode == 200) {
-        return Right(response.data);
-      }
-      return Left("something went wrong");
-    } catch (e) {
-      return Left(e.toString());
-    }
-  }
-
   Future<Either<String, Map<String, dynamic>>> post(
     String path, {
     data,
@@ -60,62 +36,6 @@ class VideoTransriptService {
         onReceiveProgress: onReceiveProgress,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return Right(response.data);
-      }
-      return Left("something went wrong");
-    } catch (e) {
-      return Left(e.toString());
-    }
-  }
-
-  ///Put Method
-  Future<Either<String, Map<String, dynamic>>> put(
-    String path, {
-    data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.put(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-        onSendProgress: onSendProgress,
-        onReceiveProgress: onReceiveProgress,
-      );
-      if (response.statusCode == 200) {
-        return Right(response.data);
-      }
-      return Left("something went wrong");
-    } catch (e) {
-      return Left(e.toString());
-    }
-  }
-
-  ///Delete Method
-  Future<Either<String, Map<String, dynamic>>> delete(
-    String path, {
-    data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.delete(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      if (response.statusCode == 204) {
         return Right(response.data);
       }
       return Left("something went wrong");

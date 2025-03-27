@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
-import '../services/firestore.service.dart';
+import '../services/firestore.config.dart';
 
 class ProjectDialog extends ConsumerStatefulWidget {
   const ProjectDialog({
@@ -36,13 +36,12 @@ class _ProjectDialogState extends ConsumerState<ProjectDialog> {
     }
 
     setState(() => _isSubmitting = true);
-
     try {
       final projectName = widget.projectNameController.text.trim();
       final youtubeUrl = widget.youtubeUrlController.text.trim();
 
       final projectResult = await ref
-          .read(firestoreProvider)
+          .read(firestoreConfigProvider)
           .createMetadata(projectName);
 
       projectResult.fold(
@@ -82,7 +81,7 @@ class _ProjectDialogState extends ConsumerState<ProjectDialog> {
             .toList();
 
     await ref
-        .read(firestoreProvider)
+        .read(firestoreConfigProvider)
         .addIssuesToProject(userId, projectId, issuesList);
 
     setState(() => _isSubmitting = false);

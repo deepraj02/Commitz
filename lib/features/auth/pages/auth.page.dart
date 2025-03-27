@@ -1,6 +1,6 @@
 import 'package:commitz/core/helpers/responsive_layout.helper.dart';
 import 'package:commitz/features/auth/pages/responsive.config.dart';
-import 'package:commitz/features/auth/providers/github.service.provider.dart';
+import 'package:commitz/features/auth/providers/github_auth_service.provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:modular_ui/modular_ui.dart';
