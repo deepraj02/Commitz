@@ -1,13 +1,11 @@
-import asyncio
 import os
-import re
-import json
 import logging
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from youtube_transcript_api import YouTubeTranscriptApi
+
+from utils.video_utils import VideoUtils
+from models.video_request_model import VideoRequest
 from services.gemini_service import GeminiService
 from dotenv import load_dotenv
 
@@ -22,6 +20,7 @@ load_dotenv()
 logger.info("Application starting...")
 
 app = FastAPI()
+video_utils = VideoUtils()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,39 +35,14 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not set")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 logger.info(f"Using Redis at: {REDIS_URL}")
-
-gemini_service = GeminiService(GEMINI_API_KEY)
+gemini_service = GeminiService(GEMINI_API_KEY, redis_url=REDIS_URL)
 logger.info("Gemini service initialized")
-
-class VideoRequest(BaseModel):
-    video_url: str
-    x_api_key: Optional[str] = None
 
 async def get_api_key(x_api_key: Optional[str] = Header(default=None)) -> Optional[str]:
     return x_api_key
 
-def extract_video_id(url: str) -> str:
-    patterns = [
-        r'(?:v=|/)([\w-]{11})(?:\?|&|/|$)',
-        r'(?:embed/)([\w-]{11})(?:\?|&|/|$)',
-        r'(?:youtu\.be/)([\w-]{11})(?:\?|&|/|$)'
-    ]
-    for pattern in patterns:
-        if match := re.search(pattern, url):
-            video_id = match.group(1)
-            logger.info(f"Extracted video ID: {video_id}")
-            return video_id
-    logger.error(f"Invalid YouTube URL: {url}")
-    raise ValueError("Invalid YouTube URL")
-
 def validate_api_key(key: Optional[str]) -> bool:
     return key == 'test_key'
-
-async def fetch_transcript(video_id: str) -> str:
-    transcript_list = await asyncio.to_thread(YouTubeTranscriptApi.get_transcript, video_id)
-    transcript = " ".join(item['text'] for item in transcript_list)
-    logger.info(f"Fetched transcript, length: {len(transcript)}")
-    return transcript
 
 @app.post("/api/v1/transcript")
 async def process_transcript(
@@ -80,12 +54,12 @@ async def process_transcript(
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
     try:
-        video_id = extract_video_id(request.video_url)
-        # cached_result = await gemini_service.get_cached_result(video_id)
-        # if cached_result:
-        #     return cached_result
+        video_id = video_utils.extract_video_id(request.video_url)
+        cached_result = await gemini_service.get_cached_result(video_id)
+        if cached_result:
+            return cached_result
 
-        transcript = await fetch_transcript(video_id)
+        transcript = await video_utils.fetch_transcript(video_id)
         if not transcript.strip():
             raise HTTPException(status_code=400, detail="Empty transcript")
 
@@ -97,11 +71,11 @@ async def process_transcript(
         logger.error(f"Processing error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# @app.get("/health")
-# async def health_check():
-#     # redis_status = gemini_service.redis_client.ping() if gemini_service.redis_client else False
-#     # status = "healthy" if redis_status else "degraded"
-#     return {"status": , }
+@app.get("/health")
+async def health_check():
+    redis_status = await gemini_service.is_redis_connected()
+    status = "healthy" if redis_status else "degraded"
+    return {"status": status, "redis": "connected" if redis_status else "disconnected"}
 
 @app.get("/")
 async def root():
